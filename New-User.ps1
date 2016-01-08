@@ -7,28 +7,40 @@ $O365Session = Connect-MsolService -Credential $O365Credentials
 
 $ExchangeCredentials = Get-Credential -Message "Enter your Domain Admin credentials"
 
-#Detect Exchange Version
-$ExchangeVersion = Get-Command  Exsetup.exe | ForEach-Object {$_.FileversionInfo}
+#Prompt for 356 or local exchange
+$location = Read-Host -Prompt "Office 365 or exchange"
+if(!($location -like "365"))
+{
 
-if ($ExchangeVersion -like "14")
-{
-    #Exchange 2010 commands
-    Add-pssnapin Microsoft.Exchange.Management.PowerShell.E2010
-    get-exchangeserver
+    #Detect Exchange Version
+    $ExchangeVersion = Get-Command  Exsetup.exe | ForEach-Object {$_.FileversionInfo}
+
+    if ($ExchangeVersion -like "14")
+    {
+        #Exchange 2010 commands
+        Add-pssnapin Microsoft.Exchange.Management.PowerShell.E2010
+        get-exchangeserver
+    }
+    elseif ($ExchangeVersion -like "15")
+    {
+        #Exchange 2013 commands
+        $Exchangeserver = (Get-ADDomainController).HostName
+        $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
+    }
+    elseif ($ExchangeVersion -like "16")
+    {
+        #Exchange 2016 commands
+        $Exchangeserver = (Get-ADDomainController).HostName
+        $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
+    }
+    else
+    {
+        Write-Host "Unsupported Exchange version"
+    }
 }
-elseif ($ExchangeVersion -like "15")
+elseif($location -like "365")
 {
-    #Exchange 2013 commands
-    $Exchangeserver = (Get-ADDomainController).HostName
-    $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentialss
-}
-elseif ($ExchangeVersion -like "16")
-{
-    #Exchange 2016 commands
-}
-else
-{
-    Write-Host "Unsupported Exchange version"
+    Write-host "Office 365"
 }
 
 
