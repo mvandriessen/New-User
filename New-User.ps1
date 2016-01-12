@@ -1,5 +1,5 @@
 ﻿$OUList = Get-ADOrganizationalUnit -Filter *
-$DesiredOU = NULL
+$DesiredOU = $NULL
 $found = $false
 $O365URL = "https://ps.outlook.com/powershell"
 $O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
@@ -38,7 +38,7 @@ if (-not $found)
 }
 
 #Create new AD user
-New-ADUser -SamAccountName $UserName -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -Enabled $true
+New-ADUser -SamAccountName $UserName -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
 
 #Prompt for 356 or local exchange
 $location = Read-Host -Prompt "Office 365 or exchange"
@@ -77,23 +77,3 @@ elseif($location -like "365")
     Write-host "Office 365"
     New-MsolUser
 }
-
-
-#Write-host "Connected"
-
-<#switch ($a) 
-    { 
-        1 {$ou} 
-        2 {"The color is blue."} 
-        3 {"The color is green."} 
-        4 {"The color is yellow."} 
-        5 {"The color is orange."} 
-        6 {"The color is purple."} 
-        7 {"The color is pink."}
-        8 {"The color is brown."} 
-    }
-#>
-
-
-
-
