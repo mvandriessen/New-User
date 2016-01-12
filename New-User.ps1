@@ -13,6 +13,7 @@ $LastName = Read-Host -Prompt "Enter the last name"
 $UserName = Read-Host -Prompt "Enter the user name"
 $Password = Read-Host -Prompt "Enter the password" -AsSecureString
 $Title = Read-Host -Prompt "Enter the title of the user. Leave blank if not needed"
+$Domain = Read-Host -Prompt "Enter your email domain."
 $name = $FirstName + ' ' + $LastName
 
 #Get list of all OUs and prompt for desired one
@@ -38,7 +39,7 @@ if (-not $found)
 }
 
 #Create new AD user
-New-ADUser -SamAccountName $UserName -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
+$NewUser = New-ADUser -SamAccountName $UserName -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
 
 #Prompt for 356 or local exchange
 $location = Read-Host -Prompt "Office 365 or exchange"
@@ -59,12 +60,18 @@ if(!($location -like "365"))
         #Exchange 2013 commands
         $Exchangeserver = (Get-ADDomainController).HostName
         $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
+        Import-PSSession -Session $ExchangeSession
+
+        Enable-Mailbox -Identity $NewUser
     }
     elseif ($ExchangeVersion -like "16")
     {
         #Exchange 2016 commands
         $Exchangeserver = (Get-ADDomainController).HostName
         $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
+        Import-PSSession -Session $ExchangeSession
+
+        Enable-Mailbox -Identity $NewUser
     }
     else
     {
