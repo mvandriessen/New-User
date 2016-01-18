@@ -12,6 +12,7 @@ $FirstName = Read-Host -Prompt "Enter the first name"
 $LastName = Read-Host -Prompt "Enter the last name"
 $UserName = Read-Host -Prompt "Enter the user name"
 $Password = Read-Host -Prompt "Enter the password" -AsSecureString
+$ADDomain = Read-Host -Prompt "Enter the AD Domain name"
 $Title = Read-Host -Prompt "Enter the title of the user. Leave blank if not needed"
 $Domain = Read-Host -Prompt "Enter your email domain."
 $name = $FirstName + ' ' + $LastName
@@ -39,7 +40,7 @@ if (-not $found)
 }
 
 #Create new AD user
-$NewUser = New-ADUser -SamAccountName $UserName -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
+$NewUser = New-ADUser -SamAccountName $UserName -UserPrincipalName $UserName@$ADDomain -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
 
 #Prompt for 356 or local exchange
 $location = Read-Host -Prompt "Office 365 or exchange"
@@ -54,6 +55,8 @@ if(!($location -like "365"))
         #Exchange 2010 commands
         Add-pssnapin Microsoft.Exchange.Management.PowerShell.E2010
         $ExchangeServer = Get-ExchangeServer
+
+        Enable-Mailbox -Identity $NewUser.SamAccountName
     }
     elseif ($ExchangeVersion -like "15")
     {
@@ -62,7 +65,7 @@ if(!($location -like "365"))
         $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
         Import-PSSession -Session $ExchangeSession
 
-        Enable-Mailbox -Identity $NewUser
+        Enable-Mailbox -Identity $NewUser.SamAccountName
     }
     elseif ($ExchangeVersion -like "16")
     {
@@ -71,7 +74,7 @@ if(!($location -like "365"))
         $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
         Import-PSSession -Session $ExchangeSession
 
-        Enable-Mailbox -Identity $NewUser
+        Enable-Mailbox -Identity $NewUser.SamAccountName
     }
     else
     {
