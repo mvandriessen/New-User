@@ -1,9 +1,7 @@
-﻿$OUList = Get-ADOrganizationalUnit -Filter *
-$DesiredOU = $NULL
-$found = $false
-$O365URL = "https://ps.outlook.com/powershell"
+﻿
+#$O365URL = "https://ps.outlook.com/powershell"
 $O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
-$O365Session = Connect-MsolService -Credential $O365Credentials
+#$O365Session = Connect-MsolService -Credential $O365Credentials
 
 $ExchangeCredentials = Get-Credential -Message "Enter your Domain Admin credentials"
 
@@ -16,11 +14,15 @@ $Password = Read-Host -Prompt "Enter the password" -AsSecureString
 $ADDomain = Read-Host -Prompt "Enter the AD Domain name"
 $MailDomain = Read-Host -Prompt "Enter the e-mail domain name"
 $Title = Read-Host -Prompt "Enter the title of the user. Leave blank if not needed"
-$Domain = Read-Host -Prompt "Enter your email domain."
+$Loginscript = Read-Host -Prompt "Enter the login script for the user. Leave blank if not needed"
+$Homefolder = Read-Host -Prompt "Enter the home folder of the user. Leave blank if not needed"
 $name = "$FirstName $LastName"
 
 #Get list of all OUs and prompt for desired one
 #To do: convert to function to allow parametrisation
+$DesiredOU = $NULL
+$found = $false
+$OUList = Get-ADOrganizationalUnit -Filter *
 $oulist | select name | ft
 $ANS = (Read-Host "Choose from these OUs")
 
@@ -42,7 +44,17 @@ if (-not $found)
 }
 
 #Create new AD user
-$NewUser = New-ADUser -SamAccountName $UserName -UserPrincipalName $UserName@$ADDomain -Name $name -GivenName $FirstName -Surname $LastName -Path $DesiredOU -AccountPassword $Password -Enabled $true
+try 
+{
+    $NewUser = New-ADUser -SamAccountName $UserName -UserPrincipalName $UserName@$ADDomain -Name $name -GivenName $FirstName -Surname $LastName `
+        -Path $DesiredOU -Title $Title -HomeDirectory $Homefolder -ScriptPath $Loginscript -AccountPassword $Password -Enabled $true
+}
+catch [System.Object] 
+{
+    Write-Output "Could not create user $name."   
+    break
+}
+
 
 #Prompt for 356 or local exchange
 $location = Read-Host -Prompt "Office 365 or exchange"
@@ -88,7 +100,7 @@ if(!($location -like "365"))
 }
 elseif($location -like "365")
 {
-    Write-host "Creating user in Office 365"
+    Write-host "Creating user in Office 365" -ForegroundColor Yellow
 
     #Detect Office 365 licenses and let user choose 
     Write-Host "Detecting Office 365 licenses" -ForegroundColor Yellow
@@ -125,7 +137,11 @@ elseif($location -like "365")
                
                break
             }
-            else{Write-Host "License not found! User was not created." -ForegroundColor Red}
+            else
+            {
+                Write-Host "License not found! User was not created." -ForegroundColor Red 
+                break
+            }
         }
         else 
         {
