@@ -71,30 +71,58 @@ if(!($location -like "365"))
         $ExchangeServer = Get-ExchangeServer
 
         Enable-Mailbox -Identity $NewUser.SamAccountName
+        Write-Host "Mailbox created" -ForegroundColor Yellow
     }
     elseif ($ExchangeVersion -like "15")
     {
         #Exchange 2013 commands
-        #This assumes Exchange is on the DC. Will add error handling, allowing to specify exchange server.
         $Exchangeserver = (Get-ADDomainController).HostName
-        $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
-        Import-PSSession -Session $ExchangeSession
-
+        $success = $false
+        while($success -eq $false)
+        {
+            $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials -ErrorAction Ignore
+            if($?)
+            {
+                $success = $true
+                Import-PSSession -Session $ExchangeSession
+                Write-host "Session to $ExchangeServer has been opened" -ForegroundColor Yellow 
+            }
+            else 
+            {
+                Write-Host "Please enter a valid Exchange server: " -ForegroundColor -NoNewline
+                $Exchangeserver = Read-Host
+            }
+        }
+        
         Enable-Mailbox -Identity $NewUser.SamAccountName
+        Write-Host "Mailbox created" -ForegroundColor Yellow
     }
     elseif ($ExchangeVersion -like "16")
     {
         #Exchange 2016 commands
-        #This assumes Exchange is on the DC. Will add error handling, allowing to specify exchange server.
-        $Exchangeserver = (Get-ADDomainController).HostName
-        $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials
-        Import-PSSession -Session $ExchangeSession
-
+        $success = $false
+        while($success -eq $false)
+        {
+            $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$Exchangeserver/PowerShell/ -Authentication Kerberos -Credential $ExchangeCredentials -ErrorAction Ignore
+            if($?)
+            {
+                $success = $true
+                Import-PSSession -Session $ExchangeSession
+                Write-host "Session to $ExchangeServer has been opened" -ForegroundColor Yellow 
+            }
+            else 
+            {
+                Write-Host "Please enter a valid Exchange server: " -ForegroundColor -NoNewline
+                $Exchangeserver = Read-Host
+            }
+        }
+        
         Enable-Mailbox -Identity $NewUser.SamAccountName
+        Write-Host "Mailbox created" -ForegroundColor Yellow
     }
     else
     {
-        Write-Host "Unsupported Exchange version"
+        Write-Host "Unsupported Exchange version" -ForegroundColor Red
         Exit
     }
 }
