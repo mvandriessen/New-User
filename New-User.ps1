@@ -1,8 +1,6 @@
-﻿$O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
-$ExchangeCredentials = Get-Credential -Message "Enter your Domain Admin credentials"
-
-#Populate variables
+﻿#Populate variables
 #will add error handling for wrong input
+$ExchangeCredentials = Get-Credential -Message "Enter your Domain Admin credentials"
 $FirstName = Read-Host -Prompt "Enter the first name"
 $LastName = Read-Host -Prompt "Enter the last name"
 $UserName = Read-Host -Prompt "Enter the user name"
@@ -129,6 +127,8 @@ if(!($location -like "365"))
 }
 elseif($location -like "365")
 {
+    $O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
+    
     Write-host "Creating user in Office 365" -ForegroundColor Yellow
 
     #Detect Office 365 licenses and let user choose 
