@@ -1,8 +1,4 @@
-﻿
-#$O365URL = "https://ps.outlook.com/powershell"
-$O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
-#$O365Session = Connect-MsolService -Credential $O365Credentials
-
+﻿$O365Credentials = Get-Credential -Message "Enter your Office 365 admin credentials"
 $ExchangeCredentials = Get-Credential -Message "Enter your Domain Admin credentials"
 
 #Populate variables
@@ -24,24 +20,29 @@ $DesiredOU = $NULL
 $found = $false
 $OUList = Get-ADOrganizationalUnit -Filter *
 $oulist | select name | ft
-$ANS = (Read-Host "Choose from these OUs")
+$ANS = $NULL
 
-foreach ($ou in $OUList)
+#Loop through OU list untill one is found
+do
 {
-    if ($ou.DistinguishedName -like "*$ANS*")
+    $ANS = (Read-Host "Choose from these OUs")
+    foreach ($ou in $OUList)
     {
-        Write-Host "Found"
-        Write-host $ou
-        $found = $true
-        $DesiredOU = $ou
-        break
+        if ($ou.Name -like "*$ANS*")
+        {
+            Write-Host "OU Found" -ForegroundColor Yellow
+            Write-host $ou
+            $found = $true
+            $DesiredOU = $ou
+        }
     }
-}
 
-if (-not $found)
-{
-    Write-Host "NO GOOD"
-}
+    if (-not $found)
+    {
+        Write-Host "OU not found! Please try again" -ForegroundColor Red
+    }
+}while($found -eq $false)
+
 
 #Create new AD user
 try 
@@ -51,7 +52,7 @@ try
 }
 catch [System.Object] 
 {
-    Write-Output "Could not create user $name."   
+    Write-Output "Could not create user $name."
     break
 }
 
@@ -89,7 +90,7 @@ if(!($location -like "365"))
             }
             else 
             {
-                Write-Host "Please enter a valid Exchange server: " -ForegroundColor -NoNewline
+                Write-Host "Please enter a valid Exchange server: " -ForegroundColor Red -NoNewline
                 $Exchangeserver = Read-Host
             }
         }
